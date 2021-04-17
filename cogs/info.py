@@ -2,6 +2,7 @@ import time
 import discord
 import psutil
 import os
+import asyncio
 
 from datetime import datetime
 from discord.ext import commands
@@ -68,6 +69,38 @@ class Information(commands.Cog):
 
         await ctx.send(content=f"ℹ About **{ctx.bot.user}** | **{self.config['version']}**", embed=embed)
 
+    #@commands.command(aliases=['saluta'])
+    @commands.command()
+    async def saluta(self, ctx, user: discord.Member = None, *, reason: commands.clean_content = ""):
+        """ per salutare gli amici """
+        if not user or user.id == ctx.author.id:
+            return await ctx.send(f"**{ctx.author.name}** saluta tutti!✌️")
+        if user.id == self.bot.user.id:
+            return await ctx.send("*Si saluta* ✌️")
+        if user.bot:
+            return await ctx.send(f"**{ctx.author.name}** grazie di salutare anche noi bot!")
+
+        salu_offer = f"**{user.name}**, **{ctx.author.name}** ti saluta!✌️"
+        salu_offer = salu_offer + f"\n\n**Reason:** {reason}" if reason else salu_offer
+        msg = await ctx.send(salu_offer)
+
+        def reaction_check(m):
+            if m.message_id == msg.id and m.user_id == user.id and str(m.emoji) == "✌️":
+                return True
+            return False
+
+        try:
+            await msg.add_reaction("✌️")
+            await self.bot.wait_for('raw_reaction_add', timeout=30.0, check=reaction_check)
+            await msg.edit(content=f"**{user.name}** e **{ctx.author.name}** si salutano amichevolmente ✌️")
+        except asyncio.TimeoutError:
+            await msg.delete()
+            await ctx.send(f"Beh, **{ctx.author.name}** sembra che  **{user.name}** non voglia salutarti...")
+        except discord.Forbidden:
+            # Yeah so, bot doesn't have reaction permission, drop the "offer" word
+            salu_offer = f"**{user.name}**, **{ctx.author.name}** ti saluta! ✌️"
+            salu_offer = salu_offer + f"\n\n**Reason:** {reason}" if reason else salu_offer
+            await msg.edit(content=salu_offer)
 
 def setup(bot):
     bot.add_cog(Information(bot))
