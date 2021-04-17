@@ -101,6 +101,53 @@ class Information(commands.Cog):
             salu_offer = f"**{user.name}**, **{ctx.author.name}** ti saluta! ✌️"
             salu_offer = salu_offer + f"\n\n**Reason:** {reason}" if reason else salu_offer
             await msg.edit(content=salu_offer)
+            
+    @commands.command()
+    async def greet(self, ctx, user: discord.Member = None, *, reason: commands.clean_content = ""):
+        """ greet sameone """
+        if not user or user.id == ctx.author.id:
+            msg_txt= f"**{ctx.author.name}** greets everyone!✌️"
+        if user:
+            msg_txt = f"**{user.name}**, **{ctx.author.name}** greets you!✌️"
+            if user.id == self.bot.user.id:
+                msg_txt= "*Greets himself*... sad..."
+            if user.bot:
+                msg_txt= f"**{ctx.author.name}** thanks to think also to us bot!✌️"
+               
+        embed = discord.Embed(title="Greets", description=msg_txt, colour=0x87CEEB, timestamp=datetime.utcnow())
+        embed.set_author(name="WabbitBot", icon_url="https://github.com/Chetral/discord_bot.py/blob/master/images/wabbit.JPG")
+        if reason != "":
+            embed.add_field(name="Reason", value=reason, inline=False)
+        #embed.set_footer(text="Wow! A footer!", icon_url="https://cdn.discordapp.com/emojis/754736642761424986.png")
+        
+        msg = await ctx.send(content="", embed=embed)
+        
+        embed2 = discord.Embed(title="Greets", description=f"**{user.name}** and **{ctx.author.name}** greets each other friendly! ✌️", colour=0x87CEEB, timestamp=datetime.utcnow())
+        embed2.set_author(name="WabbitBot", icon_url="https://github.com/Chetral/discord_bot.py/blob/master/images/wabbit.JPG")
+        embed3 = discord.Embed(title="Greets", description=f"Well, **{ctx.author.name}** seems that **{user.name}** doesn't want to greet you...", colour=0x87CEEB, timestamp=datetime.utcnow())
+        embed3.set_author(name="WabbitBot", icon_url="https://github.com/Chetral/discord_bot.py/blob/master/images/wabbit.JPG")
+        
+        
+        def reaction_check(m):
+            if m.message_id == msg.id and m.user_id == user.id and str(m.emoji) == "✌️":
+                return True
+            return False
+
+        try:
+            await msg.add_reaction("✌️")
+            await self.bot.wait_for('raw_reaction_add', timeout=30.0, check=reaction_check)
+            #await msg.edit(content=f"**{user.name}** and **{ctx.author.name}** greets each other friendly! ✌️")
+            await msg.edit(embed=embed2)
+        except asyncio.TimeoutError:
+            #await msg.delete()
+            #await ctx.send(f"Well, **{ctx.author.name}** seems that **{user.name}** doesn't want to greet you...")
+            await msg.edit(embed=embed3)
+        except discord.Forbidden:
+            # Yeah so, bot doesn't have reaction permission, drop the "offer" word
+            salu_offer = f"**{user.name}**, **{ctx.author.name}** greets you! ✌️"
+            salu_offer = salu_offer + f"\n\n**Reason:** {reason}" if reason else salu_offer
+            await msg.edit(content=salu_offer)
+
 
 def setup(bot):
     bot.add_cog(Information(bot))
